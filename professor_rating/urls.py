@@ -15,20 +15,26 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from ratings import views
-
-from django.contrib import admin
 from django.urls import path, include
-from ratings import views
+from rest_framework.routers import DefaultRouter
+from rest_framework.authtoken import views as authtoken_views
+from ratings.views import ProfessorViewSet, ModuleViewSet, ModuleInstanceViewSet, RatingViewSet, RegisterView, RateProfessorView, AverageRatingView, RatingsListView, ListModulesView, LogoutView
+
+router = DefaultRouter()
+router.register(r'professors', ProfessorViewSet)
+router.register(r'modules', ModuleViewSet)
+router.register(r'module-instances', ModuleInstanceViewSet)
+router.register(r'ratings', RatingViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('rate/', views.rate_professor, name='rate_professor'),
-    path('list-modules/', views.list, name='list'),
-    path('register/', views.register, name='register'),
-    path('login/', views.user_login, name='login'),
-    path('logout/', views.user_logout, name='logout'),
-    path('average-rating/', views.average_rating, name='average-rating'),
-    path('ratings/', views.ratings_list, name='ratings_list'),
+    path('api/', include(router.urls)),
+    path('api/register/', RegisterView.as_view(), name='register'),
+    path('api/token/', authtoken_views.obtain_auth_token, name='token_obtain_pair'),
+    path('api/logout/', LogoutView.as_view(), name='logout'),
+    path('api/rate/', RateProfessorView.as_view(), name='rate_professor'),
+    path('api/average-rating/', AverageRatingView.as_view(), name='average_rating'),
+    path('api/ratings-list/', RatingsListView.as_view(), name='ratings_list'),
+    path('api/list-modules/', ListModulesView.as_view(), name='list_modules'),
+
 ]
