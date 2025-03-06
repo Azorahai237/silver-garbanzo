@@ -8,6 +8,7 @@ from .serializers import ProfessorSerializer, ModuleSerializer, ModuleInstanceSe
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.db import IntegrityError
+from django.db.models import Avg
 import json
 
 class ProfessorViewSet(viewsets.ModelViewSet):
@@ -175,12 +176,17 @@ class AverageRatingView(APIView):
         except Module.DoesNotExist:
             return Response({'status': 'error', 'message': 'Module not found'}, status=status.HTTP_404_NOT_FOUND)
 
+        # Filter ratings by professor and module
+        ratings = Rating.objects.filter(professor=professor, module_instance__module=module)
+        average_rating = ratings.aggregate(Avg('rating'))['rating__avg']
+
         return Response({
             'status': 'success',
-            'average_rating': professor.average_rating,
+            'average_rating': average_rating,
             'module_name': module.name,
             'professor_name': professor.name
         }, status=status.HTTP_200_OK)
+
 
 class RatingsListView(APIView):
     permission_classes = [IsAuthenticated]
