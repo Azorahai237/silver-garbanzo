@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Professor, Module, ModuleInstance, Rating
 from .serializers import ProfessorSerializer, ModuleSerializer, ModuleInstanceSerializer, RatingSerializer
@@ -67,7 +68,7 @@ class RegisterView(APIView):
         password = data.get('password')
         
         if User.objects.filter(username=username).exists():
-            return Response({'status': 'error', 'message': 'Username already exists'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status': 'error', 'message': 'Username already exists'}, status=status.HTTP_404_NOT_FOUND)
         
         User.objects.create_user(username=username, email=email, password=password)
         return Response({'status': 'success', 'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
@@ -83,8 +84,10 @@ class LogoutView(APIView):
             if token:
                 token.delete()
             return Response({'status': 'success', 'message': 'Logged out successfully'}, status=status.HTTP_200_OK)
+        except AuthenticationFailed:
+            return Response({'status': 'error', 'message': 'This device is already logged out'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'status': 'error', 'message': "Server encountered error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class RateProfessorView(APIView):
     permission_classes = [IsAuthenticated]
@@ -105,7 +108,7 @@ class RateProfessorView(APIView):
 
             # Check if the professor is associated with the module instance
             if not module_instance.professors.filter(id=professor_id).exists():
-                return Response({'status': 'error', 'message': 'Professor is not teaching this module instance'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'status': 'error', 'message': 'Professor is not teaching this module instance'}, status=status.HTTP_404_NOT_FOUND)
 
             # Create or update the rating
             rating, created = Rating.objects.update_or_create(
@@ -127,8 +130,6 @@ class RateProfessorView(APIView):
             return Response({'status': 'error', 'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         except ModuleInstance.DoesNotExist:
             return Response({'status': 'error', 'message': 'Module instance not found'}, status=status.HTTP_404_NOT_FOUND)
-        except IntegrityError:
-            return Response({'status': 'error', 'message': 'You have already rated this professor for this module instance'}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
