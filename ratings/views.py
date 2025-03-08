@@ -76,7 +76,6 @@ class RegisterView(APIView):
 
 
 class LogoutView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         try:
@@ -134,7 +133,6 @@ class RateProfessorView(APIView):
             return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class ListModulesView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         try:
@@ -157,7 +155,6 @@ class ListModulesView(APIView):
             return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class AverageRatingView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         data = request.data
@@ -188,7 +185,6 @@ class AverageRatingView(APIView):
 
 
 class RatingsListView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         try:
