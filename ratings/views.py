@@ -76,7 +76,7 @@ class RegisterView(APIView):
 
 
 class LogoutView(APIView):
-
+    permission_classes = [AllowAny]
     def post(self, request):
         try:
             token = request.auth
@@ -133,7 +133,7 @@ class RateProfessorView(APIView):
             return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class ListModulesView(APIView):
-
+    permission_classes = [AllowAny]
     def get(self, request):
         try:
             module_instances = ModuleInstance.objects.all()
@@ -155,7 +155,7 @@ class ListModulesView(APIView):
             return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class AverageRatingView(APIView):
-
+    permission_classes = [AllowAny]
     def post(self, request):
         data = request.data
         professor_id = data.get('professor_id')
@@ -185,7 +185,7 @@ class AverageRatingView(APIView):
 
 
 class RatingsListView(APIView):
-
+    permission_classes = [AllowAny]
     def get(self, request):
         try:
             professors = Professor.objects.all()
