@@ -6,7 +6,7 @@ from django.db.models import Avg
 class Professor(models.Model):
     id = models.CharField(max_length=10, primary_key=True)
     name = models.CharField(max_length=100)
-    average_rating = models.FloatField(default=0.0)  # Add field to store average rating
+    average_rating = models.FloatField(default=0.0) 
     
     def __str__(self):
         return self.name
@@ -20,12 +20,12 @@ class Module(models.Model):
 
 class ModuleInstance(models.Model):
     module = models.ForeignKey(Module, on_delete=models.CASCADE)
-    professors = models.ManyToManyField(Professor)  # Changed to ManyToManyField
+    professors = models.ManyToManyField(Professor)  
     year = models.IntegerField()
     semester = models.IntegerField()
     
     class Meta:
-        unique_together = (('module', 'year', 'semester'),)  # Updated unique_together constraint
+        unique_together = (('module', 'year', 'semester'),)  
     
     def __str__(self):
         return f"{self.module.name} ({self.year}, Semester {self.semester})"
@@ -37,7 +37,7 @@ class Rating(models.Model):
     rating = models.IntegerField()
 
     class Meta:
-        unique_together = (('module_instance', 'professor', 'user'),)  # Add unique constraint
+        unique_together = (('module_instance', 'professor', 'user'),)  
 
     def __str__(self):
         return f"{self.professor.name}: {self.rating} stars"
