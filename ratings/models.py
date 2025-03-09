@@ -7,14 +7,16 @@ class Professor(models.Model):
     id = models.CharField(max_length=10, primary_key=True)
     name = models.CharField(max_length=100)
     average_rating = models.FloatField(default=0.0) 
-    
+    last_updated = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return self.name
 
 class Module(models.Model):
     code = models.CharField(max_length=10, primary_key=True)
     name = models.CharField(max_length=100)
-    
+    last_updated = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return self.name
 
@@ -23,7 +25,8 @@ class ModuleInstance(models.Model):
     professors = models.ManyToManyField(Professor)  
     year = models.IntegerField()
     semester = models.IntegerField()
-    
+    last_updated = models.DateTimeField(auto_now=True)
+
     class Meta:
         unique_together = (('module', 'year', 'semester'),)  
     
@@ -35,7 +38,8 @@ class Rating(models.Model):
     professor = models.ForeignKey(Professor, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     rating = models.IntegerField()
-
+    last_updated = models.DateTimeField(auto_now=True)
+    
     class Meta:
         unique_together = (('module_instance', 'professor', 'user'),)  
 
