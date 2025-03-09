@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import Avg
-
+from django.core.exceptions import ValidationError
 
 class Professor(models.Model):
     id = models.CharField(max_length=10, primary_key=True)
@@ -47,6 +47,8 @@ class Rating(models.Model):
         return f"{self.professor.name}: {self.rating} stars"
 
     def save(self, *args, **kwargs):
+        if not self.module_instance.professors.filter(id=self.professor.id).exists():
+            raise ValidationError("Professor is not teaching this module instance")
         super().save(*args, **kwargs)
         self.update_professor_average_rating()
 

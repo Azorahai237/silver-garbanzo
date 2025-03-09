@@ -16,47 +16,42 @@ class ProfessorViewSet(viewsets.ModelViewSet):
     queryset = Professor.objects.all()
     serializer_class = ProfessorSerializer
 
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
 class ModuleViewSet(viewsets.ModelViewSet):
     queryset = Module.objects.all()
     serializer_class = ModuleSerializer
 
     def list(self, request, *args, **kwargs):
-        response = super().list(request, *args, **kwargs)
-        response['Cache-Control'] = 'public, max-age=3600' 
-        return response
+        return super().list(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
-        response = super().retrieve(request, *args, **kwargs)
-        response['Cache-Control'] = 'public, max-age=3600'  
-        return response
+        return super().retrieve(request, *args, **kwargs)
 
 class ModuleInstanceViewSet(viewsets.ModelViewSet):
     queryset = ModuleInstance.objects.all()
     serializer_class = ModuleInstanceSerializer
 
     def list(self, request, *args, **kwargs):
-        response = super().list(request, *args, **kwargs)
-        response['Cache-Control'] = 'public, max-age=3600'  
-        return response
+        return super().list(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
-        response = super().retrieve(request, *args, **kwargs)
-        response['Cache-Control'] = 'public, max-age=3600' 
-        return response
+        return super().retrieve(request, *args, **kwargs)
 
 class RatingViewSet(viewsets.ModelViewSet):
     queryset = Rating.objects.all()
     serializer_class = RatingSerializer
 
     def list(self, request, *args, **kwargs):
-        response = super().list(request, *args, **kwargs)
-        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'  
-        return response
+        return super().list(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
-        response = super().retrieve(request, *args, **kwargs)
-        response['Cache-Control'] = 'no-cache, no-store, must-revalidate' 
-        return response
+        return super().retrieve(request, *args, **kwargs)
+
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -109,20 +104,23 @@ class RateProfessorView(APIView):
             if not module_instance.professors.filter(id=professor_id).exists():
                 return Response({'status': 'error', 'message': 'Professor is not teaching this module instance'}, status=status.HTTP_404_NOT_FOUND)
 
-            # Create or update the rating
-            rating, created = Rating.objects.update_or_create(
+            # Check if a rating already exists
+            if Rating.objects.filter(professor=professor, user=user, module_instance=module_instance).exists():
+                return Response({'status': 'error', 'message': 'Rating already exists and cannot be updated'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Create the rating
+            rating = Rating.objects.create(
                 professor=professor,
                 user=user,
                 module_instance=module_instance,
-                defaults={'rating': rating_value}
+                rating=rating_value
             )
 
-            if created:
-                message = "Rating added"
-            else:
-                message = "Rating updated"
+            last_modified = rating.last_updated.strftime('%a, %d %b %Y %H:%M:%S GMT')
 
-            return Response({'status': 'success', 'message': message, 'rating_id': rating.id}, status=status.HTTP_200_OK)
+            response = Response({'status': 'success', 'message': 'Rating added', 'rating_id': rating.id}, status=status.HTTP_201_CREATED)
+            response['Last-Modified'] = last_modified
+            return response
         except Professor.DoesNotExist:
             return Response({'status': 'error', 'message': 'Professor not found'}, status=status.HTTP_404_NOT_FOUND)
         except User.DoesNotExist:
@@ -134,6 +132,7 @@ class RateProfessorView(APIView):
 
 class ListModulesView(APIView):
     permission_classes = [AllowAny]
+
     def get(self, request):
         try:
             module_instances = ModuleInstance.objects.all()
@@ -150,7 +149,13 @@ class ListModulesView(APIView):
                     'taught_by': professor_names
                 })
 
-            return Response(result, status=status.HTTP_200_OK)
+            response = Response(result, status=status.HTTP_200_OK)
+            if module_instances.exists():
+                last_modified = module_instances.latest('last_updated').last_updated
+                response['Last-Modified'] = last_modified.strftime('%a, %d %b %Y %H:%M:%S GMT')
+            return response
+        except ModuleInstance.DoesNotExist:
+            return Response({'status': 'error', 'message': 'Module instance not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'status': 'error', 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

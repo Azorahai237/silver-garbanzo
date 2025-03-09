@@ -20,3 +20,12 @@ class RatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rating
         fields = '__all__'
+    def validate(self, data):
+        module_instance = data.get('module_instance')
+        professor = data.get('professor')
+
+        # Check if the professor is associated with the module instance
+        if not module_instance.professors.filter(id=professor.id).exists():
+            raise serializers.ValidationError("Professor is not teaching this module instance")
+        
+        return data
